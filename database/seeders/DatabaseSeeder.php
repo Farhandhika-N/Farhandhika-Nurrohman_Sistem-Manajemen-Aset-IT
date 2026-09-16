@@ -19,10 +19,21 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AssetSeeder::class,
         ]);
+        
+        // Akun Admin
+        User::create([
+            'name' => 'Administrator IT',
+            'email' => 'admin@aset.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+        ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Akun Staff
+        User::create([
+            'name' => 'Staff Manajemen',
+            'email' => 'staff@aset.com',
+            'password' => bcrypt('password'),
+            'role' => 'staff',
         ]);
     }
 }

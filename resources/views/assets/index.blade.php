@@ -2,7 +2,6 @@
 @section('content')
 
 <style>
-    /* Menyamakan style dasar dengan Dashboard */
     .card-dashboard {
         background: #ffffff;
         border-radius: 12px;
@@ -20,22 +19,21 @@
     .badge-soft-warning { background-color: #fef3c7; color: #d97706; font-weight: 600; padding: 0.4em 0.7em; border-radius: 6px; font-size: 0.75rem; }
     .badge-soft-danger { background-color: #fee2e2; color: #dc2626; font-weight: 600; padding: 0.4em 0.7em; border-radius: 6px; font-size: 0.75rem; }
 
-    /* PERBAIKAN PADDING TABEL AGAR LEBIH LEGA */
     .table-custom th { 
-        font-size: 0.75rem; /* Sedikit diperbesar dari 0.7rem */
+        font-size: 0.75rem;
         color: #64748b; 
         font-weight: 600; 
         text-transform: uppercase; 
         letter-spacing: 0.5px; 
         border-bottom: 2px solid #f1f5f9; 
-        padding: 16px 20px; /* Jarak atas-bawah 16px, kiri-kanan 20px */
+        padding: 16px 20px;
     }
     .table-custom td { 
         font-size: 0.85rem; 
         color: #334155; 
         vertical-align: middle; 
         border-bottom: 1px solid #f8fafc; 
-        padding: 16px 20px; /* Menyamakan dengan header agar presisi */
+        padding: 16px 20px; 
     }
 
     .input-ui { border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #334155; transition: 0.2s; }
@@ -62,9 +60,11 @@
             <a id="btnExport" class="btn btn-export shadow-sm d-flex align-items-center justify-content-center px-3" href="{{ route('assets.export') }}">
                 <i class="bi bi-file-earmark-excel fs-6 me-2"></i> Export Excel
             </a>
+            @can('admin')
             <a class="btn btn-primary-custom shadow-sm d-flex align-items-center justify-content-center px-4" href="{{ route('assets.create') }}">
                 <i class="bi bi-plus-lg fs-6 me-2"></i> Tambah Aset
             </a>
+            @endcan
         </div>
     </div>
     

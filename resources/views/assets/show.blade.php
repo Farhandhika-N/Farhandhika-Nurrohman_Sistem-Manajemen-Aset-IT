@@ -2,7 +2,6 @@
 @section('content')
 
 <style>
-    /* Konsisten dengan tema Dashboard & Index */
     .card-dashboard {
         background: #ffffff;
         border-radius: 12px;

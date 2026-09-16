@@ -40,6 +40,31 @@ class AssetController extends Controller
         return view('assets.index', compact('assets'));
     }
 
+    // FITUR DASHBOARD
+    public function dashboard()
+    {
+        // Menghitung metrik KPI
+        $totalAset = Asset::count();
+        $asetBaik = Asset::where('condition', 'Baik')->count();
+        $asetPerbaikan = Asset::where('condition', 'Perbaikan')->count();
+        $asetRusak = Asset::where('condition', 'Rusak')->count();
+
+        // Data untuk Bar Chart (Kategori)
+        $kategoriDataRaw = Asset::selectRaw('category, count(*) as total')
+                                ->groupBy('category')
+                                ->pluck('total', 'category');
+        $kategoriLabel = $kategoriDataRaw->keys()->toArray();
+        $kategoriData = $kategoriDataRaw->values()->toArray();
+
+        // Data untuk Tabel Register Terbaru (5 item terakhir)
+        $asetTerbaru = Asset::latest()->take(5)->get();
+
+        return view('assets.dashboard', compact(
+            'totalAset', 'asetBaik', 'asetPerbaikan', 'asetRusak',
+            'kategoriLabel', 'kategoriData', 'asetTerbaru'
+        ));
+    }
+
     // FITUR Export Excel
     public function exportExcel(Request $request)
     {

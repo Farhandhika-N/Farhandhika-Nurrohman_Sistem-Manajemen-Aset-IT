@@ -17,55 +17,94 @@
             overflow-x: hidden;
         }
 
-        /* --- SIDEBAR ENTERPRISE --- */
-        .sidebar {
-            width: 260px;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            background-color: #0f172a; /* Biru sangat gelap / Slate */
-            color: #94a3b8;
-            transition: all 0.3s ease-in-out;
-            z-index: 1040;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .sidebar-brand {
-            padding: 24px 20px;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #ffffff;
-            border-bottom: 1px solid #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+/* --- BODY & PAGE TRANSITION ANIMATION --- */
+    body {
+        background-color: #f1f5f9 !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-        .sidebar-nav {
-            padding: 20px 10px;
-            flex-grow: 1;
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
         }
-
-        .nav-link-sidebar {
-            color: #94a3b8;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.2s;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
+    }
 
-        .nav-link-sidebar:hover { background-color: #1e293b; color: #ffffff; }
-        .nav-link-sidebar.active { background-color: #3b82f6; color: #ffffff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);}
-        
-        .sidebar-footer { padding: 20px; border-top: 1px solid #1e293b; font-size: 0.8rem; text-align: center; }
+    main, .content-wrapper, .card-dashboard, .card-ui {
+        animation: fadeInUp 0.35s ease-out forwards;
+    }
 
+    /* --- SIDEBAR ENTERPRISE --- */
+    .sidebar {
+        width: 260px;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        background-color: #0f172a;
+        color: #94a3b8;
+        transition: all 0.3s ease-in-out;
+        z-index: 1040;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .sidebar-brand {
+        padding: 24px 20px;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #ffffff;
+        border-bottom: 1px solid #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sidebar-nav {
+        padding: 20px 12px;
+        flex-grow: 1;
+        overflow-y: auto;
+    }
+
+    .nav-link-sidebar {
+        color: #94a3b8;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.25s ease-in-out;
+    }
+
+    .nav-link-sidebar:hover {
+        background-color: #1e293b !important;
+        color: #ffffff !important;
+        transform: translateX(4px);
+    }
+
+    .nav-link-sidebar.active { 
+        background-color: #4f46e5 !important; 
+        color: #ffffff !important; 
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35); 
+    }
+    
+    .sidebar-footer { 
+        padding: 16px 20px; 
+        border-top: 1px solid #1e293b; 
+        font-size: 0.8rem; 
+        text-align: center; 
+        color: #64748b;
+    }
         /* --- MAIN CONTENT AREA --- */
         .main-wrapper {
             margin-left: 260px;
@@ -116,31 +155,62 @@
 </head>
 <body>
 
-    <!-- Sidebar Kiri -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <i class="bi bi-box-seam text-primary"></i>
-            <span>IT Asset Management</span>
+<!-- Sidebar Kiri -->
+<aside class="sidebar d-flex flex-column" id="sidebar">
+    
+    <!-- Brand / Logo -->
+    <div class="sidebar-brand d-flex align-items-center gap-3">
+        <div class="rounded d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px; background-color: rgba(79, 70, 229, 0.2); color: #818cf8;">
+            <i class="bi bi-box-seam fs-5"></i>
         </div>
-        <div class="sidebar-nav">
-            <span class="text-uppercase fw-bold mb-2 d-block ms-3" style="font-size: 0.7rem; letter-spacing: 1px; color: #475569;">Menu Utama</span>
-            
-            <a href="{{ route('dashboard') }}" class="nav-link-sidebar {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i class="bi bi-grid-1x2-fill fs-6"></i> Dashboard
-            </a>
-            <a href="{{ route('assets.index') }}" class="nav-link-sidebar {{ request()->routeIs('assets.index') || request()->routeIs('assets.show') || request()->routeIs('assets.edit') ? 'active' : '' }}">
-                <i class="bi bi-hdd-network-fill fs-6"></i> Data Inventaris
-            </a>
-            
-            <span class="text-uppercase fw-bold mt-4 mb-2 d-block ms-3" style="font-size: 0.7rem; letter-spacing: 1px; color: #475569;">Laporan</span>
-            <a href="{{ route('assets.export') }}" class="nav-link-sidebar">
-                <i class="bi bi-file-earmark-excel-fill fs-6"></i> Export Excel
-            </a>
+        <span class="fw-bold" style="letter-spacing: -0.3px; color: #ffffff;">IT Asset Management</span>
+    </div>
+
+    <!-- Navigasi Menu -->
+    <div class="sidebar-nav flex-grow-1">
+        <span class="text-uppercase fw-bold mb-2 d-block px-2" style="font-size: 0.65rem; letter-spacing: 1px; color: #64748b;">Menu Utama</span>
+        
+        <a href="{{ route('assets.dashboard') }}" class="nav-link-sidebar {{ request()->routeIs('assets.dashboard') ? 'active' : '' }}">
+            <i class="bi bi-grid-1x2-fill fs-6"></i> Dashboard
+        </a>
+        
+        <a href="{{ route('assets.index') }}" class="nav-link-sidebar {{ request()->routeIs('assets.index') || request()->routeIs('assets.show') || request()->routeIs('assets.edit') || request()->routeIs('assets.create') ? 'active' : '' }}">
+            <i class="bi bi-hdd-network-fill fs-6"></i> Data Inventaris
+        </a>
+        
+        <span class="text-uppercase fw-bold mt-4 mb-2 d-block px-2" style="font-size: 0.65rem; letter-spacing: 1px; color: #64748b;">Laporan</span>
+        
+        <a href="{{ route('assets.export') }}" class="nav-link-sidebar">
+            <i class="bi bi-file-earmark-excel-fill fs-6" style="color: #34d399;"></i> Export Excel
+        </a>
+    </div>
+
+    <!-- Bagian User Profile & Logout di Bawah Sidebar -->
+    <div class="sidebar-user-section pt-3 px-3 border-top mt-auto" style="border-color: #1e293b !important;">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center gap-2" style="overflow: hidden;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold small text-white shadow-sm flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.75rem; background-color: #334155;">
+                    {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
+                </div>
+                <div style="overflow: hidden;">
+                    <div class="fw-bold text-white text-truncate" style="font-size: 0.8rem; max-width: 110px;">{{ auth()->user()->name ?? 'Admin' }}</div>
+                    <div style="font-size: 0.65rem; color: #64748b;">Administrator</div>
+                </div>
+            </div>
+        <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-sm border text-danger p-1.5 shadow-sm logout-btn" title="Logout" style="border-radius: 6px; background-color: #334155; border-color: #475569 !important; transition: 0.2s;">
+                    <i class="bi bi-box-arrow-right fs-6 text-danger"></i>
+                </button>
+            </form>
         </div>
+        
+        <!-- Footer Sidebar -->
         <div class="sidebar-footer">
-            &copy; 2026 IT Division
+            &copy; {{ date('Y') }} IT Division
         </div>
-    </aside>
+    </div>
+</aside>
 
     <!-- Area Konten Utama -->
     <main class="main-wrapper">
