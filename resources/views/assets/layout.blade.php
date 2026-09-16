@@ -189,18 +189,21 @@
     <div class="sidebar-user-section pt-3 px-3 border-top mt-auto" style="border-color: #1e293b !important;">
         <div class="d-flex align-items-center justify-content-between mb-3">
             <div class="d-flex align-items-center gap-2" style="overflow: hidden;">
-                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold small text-white shadow-sm flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.75rem; background-color: #334155;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold small text-white shadow-sm flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.75rem; background-color: #4f46e5;">
                     {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
                 </div>
                 <div style="overflow: hidden;">
-                    <div class="fw-bold text-white text-truncate" style="font-size: 0.8rem; max-width: 110px;">{{ auth()->user()->name ?? 'Admin' }}</div>
-                    <div style="font-size: 0.65rem; color: #64748b;">Administrator</div>
+                    <div class="fw-bold text-white text-truncate" style="font-size: 0.8rem; max-width: 100px;">{{ auth()->user()->name ?? 'Admin' }}</div>
+                    <div style="font-size: 0.65rem; color: #94a3b8; text-transform: capitalize;">
+                        {{ auth()->user()->role ?? (auth()->user()->level ?? 'Administrator') }}
+                    </div>
                 </div>
             </div>
-        <form action="{{ route('logout') }}" method="POST" class="d-inline">
+            
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-inline">
                 @csrf
-                <button type="submit" class="btn btn-sm border text-danger p-1.5 shadow-sm logout-btn" title="Logout" style="border-radius: 6px; background-color: #334155; border-color: #475569 !important; transition: 0.2s;">
-                    <i class="bi bi-box-arrow-right fs-6 text-danger"></i>
+                <button type="button" onclick="confirmLogout()" class="btn btn-sm text-white shadow-sm logout-btn d-flex align-items-center justify-content-center" title="Keluar / Logout" style="border-radius: 6px; background-color: #dc2626; border: none; width: 32px; height: 32px; transition: 0.2s;">
+                    <i class="bi bi-box-arrow-right fs-6"></i>
                 </button>
             </form>
         </div>
@@ -254,4 +257,37 @@
         </script>
     @endif
 </body>
+<!-- Script Toggle Sidebar untuk Mobile -->
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        // --- SCRIPT SWEETALERT UNTUK LOGOUT ---
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Konfirmasi Keluar',
+                text: "Apakah Anda yakin ingin keluar dari sesi saat ini?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#e11e1e', 
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, Logout',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('logout-form').submit();
+                }
+            });
+        }
+    </script>
+    
+    @if(session('success'))
+        <script>
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: '{{ session("success") }}', showConfirmButton: false, timer: 1200 });
+        </script>
+    @endif
+</body>
+</html>
 </html>

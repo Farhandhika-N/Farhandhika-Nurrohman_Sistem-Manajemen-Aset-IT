@@ -186,7 +186,7 @@
             text: "Data aset IT ini akan dihapus secara permanen dari sistem!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ef4444', 
+            confirmButtonColor: '#f01414', 
             cancelButtonColor: '#94a3b8',
             confirmButtonText: 'Ya, Hapus Data',
             cancelButtonText: 'Batal',

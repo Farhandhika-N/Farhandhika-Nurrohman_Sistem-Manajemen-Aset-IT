@@ -19,7 +19,6 @@ class DashboardController extends Controller
         $kategoriLabel = ['Laptop', 'PC Desktop', 'Printer', 'Router'];
         $kategoriData = [];
         foreach ($kategoriLabel as $kat) {
-            // Karena sebelumnya mungkin ada data 'PC' atau 'PC Desktop', kita gabungkan
             if($kat == 'PC Desktop') {
                 $kategoriData[] = Asset::whereIn('category', ['PC', 'PC Desktop'])->count();
             } else {
