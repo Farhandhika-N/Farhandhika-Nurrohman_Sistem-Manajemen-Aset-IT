@@ -9,4 +9,8 @@ class Asset extends Model
     protected $fillable = [
         'asset_code', 'name', 'category', 'condition', 'problem_description', 'image', 'assigned_to'
     ];
+    public function histories()
+    {
+        return $this->hasMany(AssetHistory::class)->latest();
+    }
 }

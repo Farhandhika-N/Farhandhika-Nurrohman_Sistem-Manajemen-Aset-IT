@@ -11,7 +11,6 @@ class AssetSeeder extends Seeder
     public function run()
     {
         $assets = [
-            // --- 10 DATA LAMA ---
             [
                 'asset_code' => 'LPT-001',
                 'name' => 'Lenovo ThinkPad T14 Gen 2',
@@ -102,8 +101,6 @@ class AssetSeeder extends Seeder
                 'assigned_to' => null,
                 'created_at' => Carbon::now()->subDays(6),
             ],
-
-            // --- 10 DATA BARU TAMBAHAN ---
             [
                 'asset_code' => 'LPT-004',
                 'name' => 'Asus ExpertBook B9',

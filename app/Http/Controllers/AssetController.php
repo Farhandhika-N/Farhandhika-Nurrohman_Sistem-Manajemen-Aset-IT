@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
+use App\Models\AssetHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -160,8 +162,19 @@ class AssetController extends Controller
             $data['image'] = $request->file('image')->store('assets_images', 'public');
         }
 
-        Asset::create($data);
+        // Simpan Data Aset
+        $asset = Asset::create($data);
         
+        // PENCATATAN LOG MUTASI (BARU DITAMBAHKAN)
+        if (auth()->check()) {
+            AssetHistory::create([
+                'asset_id' => $asset->id,
+                'user_id' => auth()->id(),
+                'action' => 'Registrasi Aset Baru',
+                'notes' => 'Aset ditambahkan ke dalam sistem dengan kondisi ' . $asset->condition,
+            ]);
+        }
+
         return redirect()->route('assets.index')
             ->with('success', 'Aset IT berhasil ditambahkan.');
     }
@@ -206,7 +219,33 @@ class AssetController extends Controller
             $data['image'] = $request->file('image')->store('assets_images', 'public');
         }
 
-        $asset->update($data);
+        // Lakukan update (Asset::update() mengembalikan true/false)
+        $asset->fill($data);
+        
+        // Pengecekan Perubahan untuk Pencatatan Log Mutasi (BARU DITAMBAHKAN)
+        if (auth()->check()) {
+            if ($asset->isDirty('assigned_to')) {
+                $notes = $asset->assigned_to ? 'Dipinjamkan kepada: ' . $asset->assigned_to : 'Dikembalikan ke Gudang IT';
+                AssetHistory::create([
+                    'asset_id' => $asset->id,
+                    'user_id' => auth()->id(),
+                    'action' => 'Mutasi Pemakai',
+                    'notes' => $notes,
+                ]);
+            }
+
+            if ($asset->isDirty('condition')) {
+                AssetHistory::create([
+                    'asset_id' => $asset->id,
+                    'user_id' => auth()->id(),
+                    'action' => 'Perubahan Kondisi',
+                    'notes' => 'Kondisi diubah menjadi: ' . $asset->condition . '. Catatan: ' . ($asset->problem_description ?? '-'),
+                ]);
+            }
+        }
+        
+        // Simpan pembaruan ke database
+        $asset->save();
         
         return redirect()->route('assets.index')
             ->with('success', 'Data Aset IT berhasil diperbarui.');
@@ -215,7 +254,6 @@ class AssetController extends Controller
     // 7. DESTROY: Menghapus data dari database
     public function destroy(Asset $asset) 
     {
-        // Hapus file gambar fisik dari direktori storage sebelum menghapus data DB
         if ($asset->image) {
             Storage::disk('public')->delete($asset->image);
         }
@@ -224,5 +262,26 @@ class AssetController extends Controller
         
         return redirect()->route('assets.index')
             ->with('success', 'Aset IT berhasil dihapus.');
+    }
+
+    // FITUR HISTORY LOG MUTASI
+    public function history()
+    {
+        // Mengambil semua riwayat mutasi diurutkan dari yang terbaru
+        $histories = AssetHistory::with(['asset', 'user'])->latest()->paginate(15);
+        return view('assets.history', compact('histories'));
+    }
+
+    // FITUR CETAK PDF LOG MUTASI
+    public function exportHistoryPDF()
+    {
+        // Ambil data (tambahkan error handling jika ada data kosong)
+        $histories = AssetHistory::with(['asset', 'user'])->latest()->get();
+        
+        // Load view untuk PDF dan ubah ukurannya menjadi A4 Landscape
+        $pdf = Pdf::loadView('assets.pdf_history', compact('histories'))->setPaper('a4', 'landscape');
+        
+        // MENGGUNAKAN stream() AGAR BISA DI-PREVIEW DULU DI BROWSER
+        return $pdf->stream('Laporan_Log_Mutasi_Aset_IT.pdf');
     }
 }

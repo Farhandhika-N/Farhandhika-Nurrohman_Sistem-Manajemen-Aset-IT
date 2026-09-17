@@ -48,11 +48,13 @@
         </div>
         <p class="text-muted small mb-0">Pantauan menyeluruh terhadap status dan kondisi inventaris aset perusahaan.</p>
     </div>
+    @can('admin')
     <div class="mt-3 mt-md-0">
         <a href="{{ route('assets.create') }}" class="btn btn-primary-custom px-4 shadow-sm">
             <i class="bi bi-plus-lg me-1"></i> Entri Aset Baru
         </a>
     </div>
+    @endcan
 </div>
 
 <!-- ROW 1: KPI CARDS -->

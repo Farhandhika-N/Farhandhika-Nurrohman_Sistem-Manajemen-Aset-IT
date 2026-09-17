@@ -147,10 +147,12 @@
                                 <a class="action-btn action-btn-warning" href="{{ route('assets.edit', $asset->id) }}" title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
+                                @can('admin')
                                 @csrf @method('DELETE')
                                 <button type="button" class="action-btn action-btn-danger" onclick="confirmDelete({{ $asset->id }})" title="Hapus">
                                     <i class="bi bi-trash3"></i>
                                 </button>
+                                @endcan
                             </form>
                         </td>
                     </tr>

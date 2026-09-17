@@ -20,6 +20,63 @@
     .table-detail th { background-color: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; width: 35%; }
     .table-detail td { color: #334155; font-size: 0.9rem; border-bottom: 1px solid #f1f5f9; }
 
+    /* --- CSS TIMELINE RIWAYAT --- */
+    .timeline {
+        position: relative;
+        padding-left: 35px;
+        margin-bottom: 0;
+        list-style: none;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 14px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #e2e8f0;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+    .timeline-icon {
+        position: absolute;
+        left: -35px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 2px solid #4f46e5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+        box-shadow: 0 0 0 4px #ffffff;
+    }
+    .timeline-content {
+        background-color: #f8fafc;
+        border: 1px solid #f1f3f5;
+        border-radius: 8px;
+        padding: 15px;
+        transition: 0.2s;
+    }
+    .timeline-content:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border-color: #e2e8f0;
+    }
+    .timeline-date {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 600;
+        background-color: #e2e8f0;
+        padding: 3px 8px;
+        border-radius: 4px;
+    }
+
     /* --- TWEAK RESPONSIVE UNTUK TABEL DETAIL (MOBILE VIEW) --- */
     @media (max-width: 767.98px) {
         .table-detail tr { 
@@ -52,7 +109,7 @@
         <p class="text-muted small mb-0">Informasi lengkap spesifikasi dan riwayat perangkat.</p>
     </div>
 
-    <!-- Konten Detail -->
+    <!-- 1. Konten Detail -->
     <div class="border rounded-3 overflow-hidden mb-4" style="border-color: #e2e8f0 !important;">
         <!-- Header Kecil dalam Card -->
         <div class="px-4 py-3 border-bottom" style="background-color: #f8fafc;">
@@ -147,6 +204,56 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- 2. Konten Riwayat Mutasi & Pemeliharaan (Timeline) -->
+    <div class="border rounded-3 overflow-hidden mb-4" style="border-color: #e2e8f0 !important;">
+        <div class="px-4 py-3 border-bottom" style="background-color: #f8fafc;">
+            <h6 class="mb-0 fw-bold" style="color: #1e293b; font-size: 0.95rem;">
+                <i class="bi bi-clock-history me-2 text-primary"></i>Riwayat Mutasi & Pemeliharaan
+            </h6>
+        </div>
+        
+        <div class="p-4 bg-white">
+            @if($asset->histories && $asset->histories->count() > 0)
+                <ul class="timeline">
+                    @foreach($asset->histories as $history)
+                        <li class="timeline-item">
+                            <!-- Icon Dinamis berdasarkan tipe aksi -->
+                            <div class="timeline-icon" style="color: #4f46e5; border-color: #4f46e5;">
+                                @if($history->action == 'Registrasi Aset Baru')
+                                    <i class="bi bi-plus-lg fs-6"></i>
+                                @elseif($history->action == 'Mutasi Pemakai')
+                                    <i class="bi bi-arrow-left-right fs-6"></i>
+                                @elseif($history->action == 'Perubahan Kondisi')
+                                    <i class="bi bi-wrench-adjustable fs-6 text-warning"></i>
+                                @else
+                                    <i class="bi bi-record-circle fs-6"></i>
+                                @endif
+                            </div>
+                            
+                            <!-- Konten Timeline -->
+                            <div class="timeline-content">
+                                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-2 gap-2">
+                                    <span class="fw-bold" style="color: #1e293b; font-size: 0.95rem;">{{ $history->action }}</span>
+                                    <span class="timeline-date"><i class="bi bi-calendar-event me-1"></i>{{ $history->created_at->translatedFormat('d M Y, H:i') }}</span>
+                                </div>
+                                <p class="text-muted small mb-2" style="line-height: 1.5;">{{ $history->notes }}</p>
+                                <div class="d-flex align-items-center gap-1 text-muted fw-medium" style="font-size: 0.75rem;">
+                                    <i class="bi bi-person-circle"></i> Oleh: 
+                                    <span style="color: #4f46e5;">{{ $history->user->name ?? 'Sistem (Auto)' }}</span>
+                                </div>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            @else
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-journal-x fs-1 mb-2 d-block" style="color: #cbd5e1;"></i>
+                    <p class="small fw-medium mb-0">Belum ada riwayat tercatat untuk aset ini.</p>
+                </div>
+            @endif
         </div>
     </div>
 
