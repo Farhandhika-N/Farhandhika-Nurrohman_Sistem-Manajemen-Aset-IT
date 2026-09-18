@@ -61,9 +61,13 @@ class AssetController extends Controller
         // Data untuk Tabel Register Terbaru (5 item terakhir)
         $asetTerbaru = Asset::latest()->take(5)->get();
 
+        // [PERBAIKAN] Mengambil 5 Log Aktivitas Terakhir untuk Widget Dashboard
+        $recentHistories = AssetHistory::with(['asset', 'user'])->latest()->take(5)->get();
+
+        // [PERBAIKAN] Jangan lupa variabelnya dimasukkan ke compact()
         return view('assets.dashboard', compact(
             'totalAset', 'asetBaik', 'asetPerbaikan', 'asetRusak',
-            'kategoriLabel', 'kategoriData', 'asetTerbaru'
+            'kategoriLabel', 'kategoriData', 'asetTerbaru', 'recentHistories'
         ));
     }
 
@@ -137,13 +141,12 @@ class AssetController extends Controller
     // 3. STORE: Menyimpan data ke database
     public function store(Request $request) 
     {
-        // Validasi yang diperbarui dengan kustomisasi pesan error
         $request->validate([
             'asset_code' => 'required|unique:assets',
             'name' => 'required',
             'category' => 'required',
             'condition' => 'required',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Validasi file gambar maks 2MB
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'asset_code.required' => 'Kode Aset (S/N) wajib diisi.',
             'asset_code.unique' => 'Kode Aset sudah terdaftar di sistem.',
@@ -157,15 +160,12 @@ class AssetController extends Controller
 
         $data = $request->all();
 
-        // Menyimpan file gambar jika diunggah
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('assets_images', 'public');
         }
 
-        // Simpan Data Aset
         $asset = Asset::create($data);
         
-        // PENCATATAN LOG MUTASI (BARU DITAMBAHKAN)
         if (auth()->check()) {
             AssetHistory::create([
                 'asset_id' => $asset->id,
@@ -210,19 +210,15 @@ class AssetController extends Controller
 
         $data = $request->all();
 
-        // Mengganti gambar jika ada file baru yang diunggah
         if ($request->hasFile('image')) {
-            // Hapus gambar lama jika ada
             if ($asset->image) {
                 Storage::disk('public')->delete($asset->image);
             }
             $data['image'] = $request->file('image')->store('assets_images', 'public');
         }
 
-        // Lakukan update (Asset::update() mengembalikan true/false)
         $asset->fill($data);
         
-        // Pengecekan Perubahan untuk Pencatatan Log Mutasi (BARU DITAMBAHKAN)
         if (auth()->check()) {
             if ($asset->isDirty('assigned_to')) {
                 $notes = $asset->assigned_to ? 'Dipinjamkan kepada: ' . $asset->assigned_to : 'Dikembalikan ke Gudang IT';
@@ -244,44 +240,137 @@ class AssetController extends Controller
             }
         }
         
-        // Simpan pembaruan ke database
         $asset->save();
         
         return redirect()->route('assets.index')
             ->with('success', 'Data Aset IT berhasil diperbarui.');
     }
 
-    // 7. DESTROY: Menghapus data dari database
+// 7. DESTROY: Menghapus data dari database
     public function destroy(Asset $asset) 
     {
-        if ($asset->image) {
-            Storage::disk('public')->delete($asset->image);
-        }
-        
+        // 1. Simpan nama dan kode untuk dicatat di log karena datanya akan lenyap
+        $assetName = $asset->name;
+        $assetCode = $asset->asset_code;
+        $assetImage = $asset->image;
+
+        // 2. Hapus permanen data aset dari database 
+        // (Berkat migration baru, log lama tidak akan hilang, asset_id-nya otomatis berubah jadi NULL)
         $asset->delete();
         
+        // 3. CATAT LOG PENGHAPUSAN
+        if (auth()->check()) {
+            AssetHistory::create([
+                'asset_id' => null, // Sekarang database sudah mengizinkan NULL
+                'user_id' => auth()->id(),
+                'action' => 'Penghapusan Aset',
+                'notes' => "Aset '{$assetName}' (S/N: {$assetCode}) telah dihapus permanen dari sistem.",
+            ]);
+        }
+
+        // 4. Hapus file gambar fisik dari storage jika ada
+        if ($assetImage) {
+            Storage::disk('public')->delete($assetImage);
+        }
+        
         return redirect()->route('assets.index')
-            ->with('success', 'Aset IT berhasil dihapus.');
+            ->with('success', 'Aset IT berhasil dihapus permanen.');
     }
 
-    // FITUR HISTORY LOG MUTASI
-    public function history()
+// FITUR HISTORY LOG MUTASI (DENGAN AJAX & FILTER)
+    public function history(Request $request)
     {
-        // Mengambil semua riwayat mutasi diurutkan dari yang terbaru
-        $histories = AssetHistory::with(['asset', 'user'])->latest()->paginate(15);
+        $query = AssetHistory::with(['asset', 'user']);
+
+        // 1. Filter Pencarian Teks
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('action', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($userQ) use ($search) {
+                      $userQ->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('asset', function($assetQ) use ($search) {
+                      $assetQ->where('name', 'like', "%{$search}%")
+                             ->orWhere('asset_code', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // 2. Filter Berdasarkan Jenis Aksi
+        if ($request->filled('action_filter')) {
+            $query->where('action', $request->action_filter);
+        }
+
+        // 3. Filter Berdasarkan Waktu
+        if ($request->filled('time_filter')) {
+            $time = $request->time_filter;
+            if ($time == 'today') {
+                $query->whereDate('created_at', \Carbon\Carbon::today());
+            } elseif ($time == 'week') {
+                $query->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(), \Carbon\Carbon::now()->endOfWeek()]);
+            } elseif ($time == 'month') {
+                $query->whereMonth('created_at', \Carbon\Carbon::now()->month)
+                      ->whereYear('created_at', \Carbon\Carbon::now()->year);
+            }
+        }
+
+        $histories = $query->latest()->paginate(15);
+        $histories->appends($request->all()); 
+
+        // JIKA REQUEST DARI AJAX, KEMBALIKAN HANYA BAGIAN TABELNYA SAJA
+        if ($request->ajax()) {
+            return view('assets.partials.history_table', compact('histories'))->render();
+        }
+
         return view('assets.history', compact('histories'));
     }
 
-    // FITUR CETAK PDF LOG MUTASI
-    public function exportHistoryPDF()
+// FITUR CETAK PDF LOG MUTASI (DENGAN FILTER)
+    public function exportHistoryPDF(Request $request)
     {
-        // Ambil data (tambahkan error handling jika ada data kosong)
-        $histories = AssetHistory::with(['asset', 'user'])->latest()->get();
+        $query = AssetHistory::with(['asset', 'user']);
+
+        // 1. Filter Pencarian Teks
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('action', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($userQ) use ($search) {
+                      $userQ->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('asset', function($assetQ) use ($search) {
+                      $assetQ->where('name', 'like', "%{$search}%")
+                             ->orWhere('asset_code', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // 2. Filter Berdasarkan Jenis Aksi
+        if ($request->filled('action_filter')) {
+            $query->where('action', $request->action_filter);
+        }
+
+        // 3. Filter Berdasarkan Waktu
+        if ($request->filled('time_filter')) {
+            $time = $request->time_filter;
+            if ($time == 'today') {
+                $query->whereDate('created_at', \Carbon\Carbon::today());
+            } elseif ($time == 'week') {
+                $query->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(), \Carbon\Carbon::now()->endOfWeek()]);
+            } elseif ($time == 'month') {
+                $query->whereMonth('created_at', \Carbon\Carbon::now()->month)
+                      ->whereYear('created_at', \Carbon\Carbon::now()->year);
+            }
+        }
+
+        // Eksekusi query (ambil semua data yang lolos filter tanpa pagination)
+        $histories = $query->latest()->get();
         
-        // Load view untuk PDF dan ubah ukurannya menjadi A4 Landscape
-        $pdf = Pdf::loadView('assets.pdf_history', compact('histories'))->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('assets.pdf_history', compact('histories'))->setPaper('a4', 'portrait');
         
-        // MENGGUNAKAN stream() AGAR BISA DI-PREVIEW DULU DI BROWSER
         return $pdf->stream('Laporan_Log_Mutasi_Aset_IT.pdf');
     }
 }

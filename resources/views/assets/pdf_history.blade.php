@@ -4,31 +4,40 @@
     <meta charset="UTF-8">
     <title>Laporan Log Mutasi Aset</title>
     <style>
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10pt; color: #333; }
+        /* Pengaturan Dasar */
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 9pt; color: #334155; line-height: 1.4; }
         
-        /* --- KOP SURAT --- */
-        .kop-surat { text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px; position: relative; }
-        .kop-surat h1 { margin: 0; font-size: 18pt; letter-spacing: 1px; color: #1e293b; text-transform: uppercase; }
-        .kop-surat h2 { margin: 5px 0; font-size: 14pt; color: #4f46e5; }
-        .kop-surat p { margin: 0; font-size: 10pt; color: #475569; }
-        .garis-tipis { border-bottom: 1px solid #000; margin-top: 2px; }
+        /* --- KOP SURAT BERSIH & TEGAS --- */
+        .kop-surat { text-align: center; border-bottom: 2px solid #1e293b; padding-bottom: 12px; margin-bottom: 25px; }
+        .kop-surat h1 { margin: 0 0 5px 0; font-size: 15pt; font-weight: bold; color: #0f172a; text-transform: uppercase; }
+        .kop-surat h2 { margin: 0 0 5px 0; font-size: 12pt; color: #4f46e5; font-weight: bold; }
+        .kop-surat p { margin: 2px 0; font-size: 9pt; color: #475569; }
 
-        /* --- JUDUL LAPORAN --- */
+        /* --- JUDUL LAPORAN ELEGAN (Tanpa Underline) --- */
         .judul-laporan { text-align: center; margin-bottom: 20px; }
-        .judul-laporan h3 { margin: 0; font-size: 14pt; text-decoration: underline; }
-        .judul-laporan p { margin: 5px 0 0 0; font-size: 10pt; }
+        .judul-laporan h3 { margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
+        .judul-laporan p { margin: 0; font-size: 9pt; color: #64748b; }
 
-        /* --- TABEL --- */
+        /* --- TABEL ENTERPRISE KELAS MENENGAH --- */
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #94a3b8; padding: 8px 10px; text-align: left; vertical-align: top; }
-        th { background-color: #f1f5f9; color: #1e293b; font-size: 10pt; }
-        td { font-size: 9pt; }
+        /* Menggunakan border yang tegas seperti versi sebelumnya */
+        th, td { border: 1px solid #94a3b8; padding: 7px 6px; text-align: left; vertical-align: top; word-wrap: break-word; }
+        
+        /* Header tabel dengan latar lembut dan border bawah yang dipertegas */
+        th { background-color: #f1f5f9; color: #1e293b; font-size: 9pt; font-weight: bold; border-bottom: 2px solid #475569; }
+        
+        /* Isi tabel standar agar mudah dibaca */
+        td { font-size: 8.5pt; color: #1e293b; }
         
         .text-center { text-align: center; }
-        
-        /* --- FOOTER / TTD --- */
-        .ttd-container { width: 100%; margin-top: 40px; }
-        .ttd-box { width: 30%; float: right; text-align: center; }
+        .badge-hapus { color: #dc2626; font-weight: bold; }
+        .text-muted { color: #64748b; font-size: 7.5pt; font-style: italic; }
+
+        /* --- FOOTER / TANDA TANGAN --- */
+        .ttd-container { width: 100%; margin-top: 40px; page-break-inside: avoid; }
+        .ttd-box { width: 35%; float: right; text-align: center; }
+        .ttd-box p { margin: 3px 0; color: #334155; font-size: 9pt; }
+        .nama-ttd { font-weight: bold; text-decoration: underline; margin-top: 60px !important; color: #0f172a; }
         .clear { clear: both; }
     </style>
 </head>
@@ -36,16 +45,15 @@
 
     <!-- KOP SURAT -->
     <div class="kop-surat">
-        <h1>PT. INTI PERSERO</h1>
-        <h2>Divisi IT & Infrastruktur Jaringan</h2>
+        <h1>PT Industri Telekomunikasi Indonesia (PERSERO)</h1>
+        <h2>Divisi Bisnis dan Teknologi</h2>
         <p>Jalan Moch. Toha No. 77, Bandung 40253, Jawa Barat</p>
         <p>Telp: (022) 1234-5678 | Email: it-support@intipersero.com</p>
-        <div class="garis-tipis"></div>
     </div>
 
     <!-- JUDUL LAPORAN -->
     <div class="judul-laporan">
-        <h3>LAPORAN MUTASI DAN AKTIVITAS ASET IT</h3>
+        <h3>Laporan Mutasi dan Aktivitas Aset IT</h3>
         <p>Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y - H:i') }} WIB</p>
     </div>
 
@@ -55,10 +63,10 @@
             <tr>
                 <th width="5%" class="text-center">No</th>
                 <th width="15%">Waktu</th>
-                <th width="15%">Jenis Aksi</th>
-                <th width="20%">Nama Aset (S/N)</th>
-                <th width="30%">Detail Perubahan / Catatan</th>
-                <th width="15%">Admin Pencatat</th>
+                <th width="16%">Jenis Aksi</th>
+                <th width="22%">Nama Aset (S/N)</th>
+                <th width="27%">Detail Catatan</th>
+                <th width="15%">Admin</th>
             </tr>
         </thead>
         <tbody>
@@ -66,25 +74,29 @@
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 <td>
-                    <!-- Ditambahkan pengecekan apakah created_at ada nilainya -->
                     @if($log->created_at)
                         {{ $log->created_at->format('d/m/Y') }}<br>
-                        <small>{{ $log->created_at->format('H:i') }} WIB</small>
+                        <span style="color: #64748b; font-size: 8pt;">{{ $log->created_at->format('H:i') }} WIB</span>
                     @else
                         -
                     @endif
                 </td>
                 <td><strong>{{ $log->action }}</strong></td>
                 <td>
-                    <strong>{{ $log->asset->asset_code ?? 'N/A' }}</strong><br>
-                    {{ $log->asset->name ?? 'Aset Terhapus' }}
+                    @if($log->asset)
+                        <strong>{{ $log->asset->asset_code ?? 'N/A' }}</strong><br>
+                        {{ $log->asset->name ?? 'Aset Terhapus' }}
+                    @else
+                        <span class="badge-hapus">[ Dihapus ]</span><br>
+                        <span class="text-muted">Data fisik lenyap</span>
+                    @endif
                 </td>
                 <td>{{ $log->notes ?? '-' }}</td>
                 <td>{{ $log->user->name ?? 'Sistem / Auto' }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center">Belum ada data log aktivitas/mutasi.</td>
+                <td colspan="6" class="text-center" style="padding: 15px; color: #64748b;">Belum ada data log aktivitas atau mutasi yang tercatat dalam sistem.</td>
             </tr>
             @endforelse
         </tbody>
@@ -95,8 +107,8 @@
         <div class="ttd-box">
             <p>Bandung, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
             <p><strong>Kepala Divisi IT</strong></p>
-            <br><br><br><br>
-            <p style="text-decoration: underline; font-weight: bold;">{{ auth()->user()->name ?? 'Administrator IT' }}</p>
+            <!-- Spasi untuk tanda tangan fisik -->
+            <p class="nama-ttd">{{ auth()->user()->name ?? 'Administrator IT' }}</p>
             <p>NIP. 19820311 200801 1 009</p>
         </div>
         <div class="clear"></div>

@@ -19,7 +19,10 @@
     .badge-outline { border: 1px solid #e2e8f0; color: #64748b; font-weight: 600; padding: 0.35em 0.65em; border-radius: 6px; font-size: 0.7rem; background: #f8fafc; }
 
     .btn-primary-custom { background-color: #4f46e5; color: white; font-weight: 600; border-radius: 8px; font-size: 0.85rem; border: none; transition: 0.3s; }
-    .btn-filter { transition: 0.3s; }
+    
+    .btn-filter { background-color: #ffffff; color: #64748b !important; border: 1px solid #e2e8f0; font-weight: 600; border-radius: 6px; transition: 0.2s; }
+    .btn-filter:hover { background-color: #f1f5f9; color: #0f172a !important; }
+    .btn-filter.active-filter { background-color: #4f46e5 !important; color: #ffffff !important; border-color: #4f46e5 !important; }
     
     .kpi-title { font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; }
     .kpi-value { font-size: 2.2rem; font-weight: 800; color: #0f172a; line-height: 1; }
@@ -33,10 +36,60 @@
     
     .chart-center-wrapper { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
 
-    /* Custom Scrollbar untuk tabel */
+    /* Custom Scrollbar untuk tabel dan log aktivitas */
     .table-scrollable::-webkit-scrollbar { width: 6px; }
     .table-scrollable::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
     .table-scrollable::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+    /* CSS TIMELINE UNTUK DASHBOARD KONSISTEN DENGAN DETAIL ASET */
+    .timeline {
+        position: relative;
+        padding-left: 28px;
+        margin-bottom: 0;
+        list-style: none;
+        margin-top: 10px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 11px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #e2e8f0;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.25rem;
+    }
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+    .timeline-icon {
+        position: absolute;
+        left: -28px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 2px solid #4f46e5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+        box-shadow: 0 0 0 4px #ffffff;
+    }
+    .timeline-content {
+        background-color: #f8fafc;
+        border: 1px solid #f1f3f5;
+        border-radius: 8px;
+        padding: 12px;
+        transition: 0.2s;
+    }
+    .timeline-content:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border-color: #e2e8f0;
+    }
 </style>
 
 <!-- HEADER -->
@@ -69,7 +122,6 @@
             <div class="d-flex align-items-center gap-2 mb-2">
                 <div class="kpi-value">{{ $totalAset }}</div>
             </div>
-            <!-- Indikator Pertumbuhan (+/-) Bulan Ini -->
             @php $newThisMonth = \App\Models\Asset::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count(); @endphp
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
                 <span class="text-muted" style="font-size: 0.75rem;">Bulan ini</span>
@@ -154,7 +206,6 @@
 
 <!-- ROW 2: ALOKASI KATEGORI (BAR CHART) & RASIO KESEHATAN -->
 <div class="row g-3 mb-4">
-    <!-- Chart Kategori Aset -->
     <div class="col-lg-8">
         <div class="card-dashboard d-flex flex-column">
             <div class="d-flex justify-content-between align-items-start mb-4">
@@ -166,14 +217,12 @@
                 </div>
                 <span class="badge-outline">Total {{ count($kategoriLabel) }} Kategori</span>
             </div>
-            
             <div style="position: relative; height: 220px; width: 100%; display: flex; justify-content: center; flex-grow: 1;">
                 <canvas id="categoryBarChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Doughnut Chart (Rasio Kesehatan Aset) -->
     <div class="col-lg-4">
         <div class="card-dashboard d-flex flex-column">
             <div class="d-flex justify-content-between align-items-start mb-4">
@@ -182,7 +231,6 @@
                     <p class="text-muted mb-0" style="font-size: 0.75rem;">Status kelayakan unit</p>
                 </div>
             </div>
-            
             <div style="position: relative; height: 180px; width: 100%; display: flex; justify-content: center;">
                 <canvas id="conditionChart"></canvas>
                 <div class="chart-center-wrapper">
@@ -191,8 +239,6 @@
                     <div style="font-size: 0.65rem; color: #64748b;">{{ $asetBaik }} / {{ $totalAset }} Unit</div>
                 </div>
             </div>
-
-            <!-- Custom Legend -->
             <div class="row g-2 mt-4 px-2 justify-content-center">
                 <div class="col-12 col-sm-4">
                     <div class="border rounded px-2 py-1 text-center" style="font-size: 0.7rem; background: #fafbfc;">
@@ -227,19 +273,17 @@
                     <h6 class="fw-bold mb-1 text-dark">Direktori Seluruh Aset</h6>
                     <p class="text-muted small mb-0 mt-1">Data lengkap inventaris terbaru</p>
                 </div>
-                <!-- Tombol Filter JS -->
                 <div class="d-flex align-items-center gap-2">
                     <span class="text-muted d-none d-sm-inline" style="font-size: 0.75rem;">Filter:</span>
                     <div class="btn-group" id="filter-buttons">
-                        <button type="button" class="btn btn-sm btn-primary-custom btn-filter px-2 px-sm-3" data-filter="all" style="font-size: 0.75rem;">Semua</button>
-                        <button type="button" class="btn btn-sm btn-light border text-muted btn-filter px-2 px-sm-3" data-filter="Baik" style="font-size: 0.75rem;">Baik</button>
-                        <button type="button" class="btn btn-sm btn-light border text-muted btn-filter px-2 px-sm-3" data-filter="Perbaikan" style="font-size: 0.75rem;">Perbaikan</button>
-                        <button type="button" class="btn btn-sm btn-light border text-muted btn-filter px-2 px-sm-3" data-filter="Rusak" style="font-size: 0.75rem;">Rusak</button>
+                        <button type="button" class="btn btn-sm btn-filter active-filter px-2 px-sm-3" data-filter="all" style="font-size: 0.75rem;">Semua</button>
+                        <button type="button" class="btn btn-sm btn-filter px-2 px-sm-3" data-filter="Baik" style="font-size: 0.75rem;">Baik</button>
+                        <button type="button" class="btn btn-sm btn-filter px-2 px-sm-3" data-filter="Perbaikan" style="font-size: 0.75rem;">Perbaikan</button>
+                        <button type="button" class="btn btn-sm btn-filter px-2 px-sm-3" data-filter="Rusak" style="font-size: 0.75rem;">Rusak</button>
                     </div>
                 </div>
             </div>
             
-            <!-- Area Tabel Scrollable. Menarik SEMUA data menggunakan Eloquent langsung dari View -->
             @php 
                 $semuaAset = \App\Models\Asset::latest()->get(); 
             @endphp
@@ -289,7 +333,6 @@
                             <td colspan="4" class="text-center text-muted py-4">Belum ada data aset yang terdaftar.</td>
                         </tr>
                         @endforelse
-                        <!-- Row penanda jika hasil filter kosong (disembunyikan secara default) -->
                         <tr id="no-match-row" style="display: none;">
                             <td colspan="4" class="text-center text-muted py-5">
                                 <i class="bi bi-search fs-3 d-block mb-2 text-light"></i>
@@ -302,22 +345,58 @@
         </div>
     </div>
 
-    <!-- Log Aktivitas (Coming Soon) -->
+    <!-- Log Aktivitas Terbaru dengan TIMELINE -->
     <div class="col-lg-4">
         <div class="card-dashboard d-flex flex-column h-100">
-            <div class="d-flex justify-content-between align-items-start mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
-                    <h6 class="fw-bold mb-0 text-dark">Aktivitas & Log Mutasi</h6>
-                    <p class="text-muted mb-0" style="font-size: 0.75rem;">Jejak audit dan perbaikan</p>
+                    <h6 class="fw-bold mb-0 text-dark">Log Mutasi & Aktivitas</h6>
+                    <p class="text-muted mb-0" style="font-size: 0.75rem;">Jejak audit terbaru</p>
                 </div>
+                <a href="{{ route('assets.history') }}" class="text-decoration-none fw-semibold" style="font-size: 0.75rem; color: #4f46e5;">Lihat Semua &rarr;</a>
             </div>
 
-            <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center py-5 text-center">
-                <div class="rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; background-color: #f8fafc; border: 1px dashed #cbd5e1;">
-                    <i class="bi bi-cone-striped fs-3" style="color: #94a3b8;"></i>
-                </div>
-                <h6 class="fw-bold text-dark mb-1">Coming Soon</h6>
-                <p class="text-muted" style="font-size: 0.75rem; max-width: 80%;">Fitur pencatatan riwayat perangkat sedang dalam tahap pengembangan.</p>
+            <!-- [PERUBAHAN DISINI] Menambahkan class table-scrollable -->
+            <div class="table-responsive table-scrollable flex-grow-1 pe-2" style="max-height: 350px; overflow-y: auto;">
+                @if(isset($recentHistories) && $recentHistories->count() > 0)
+                    <ul class="timeline">
+                        @foreach($recentHistories as $log)
+                            <li class="timeline-item">
+                                <!-- Ikon Dinamis berdasarkan Jenis Aksi -->
+                                <div class="timeline-icon" style="color: #4f46e5; border-color: #4f46e5;">
+                                    @if($log->action == 'Registrasi Aset Baru')
+                                        <i class="bi bi-plus text-success" style="font-size: 1.2rem;"></i>
+                                    @elseif($log->action == 'Mutasi Pemakai')
+                                        <i class="bi bi-arrow-left-right text-primary" style="font-size: 0.85rem;"></i>
+                                    @elseif($log->action == 'Penghapusan Aset')
+                                        <i class="bi bi-trash text-danger" style="font-size: 0.8rem;"></i>
+                                    @else
+                                        <i class="bi bi-wrench text-warning" style="font-size: 0.8rem;"></i>
+                                    @endif
+                                </div>
+                                
+                                <!-- Konten Timeline -->
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between align-items-center mb-1 gap-2">
+                                        <span class="fw-bold text-dark text-truncate" style="font-size: 0.8rem; max-width: 140px;">{{ $log->action }}</span>
+                                        <span class="text-muted fw-medium" style="font-size: 0.65rem;"><i class="bi bi-clock me-1"></i>{{ $log->created_at->diffForHumans() }}</span>
+                                    </div>
+                                    <div class="text-secondary mb-1" style="font-size: 0.75rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="{{ $log->notes }}">
+                                        {{ $log->notes }}
+                                    </div>
+                                    <div class="text-muted fw-medium mt-2" style="font-size: 0.7rem;">
+                                        <i class="bi bi-upc-scan me-1" style="color: #4f46e5;"></i> {{ $log->asset->asset_code ?? 'Aset Terhapus' }}
+                                    </div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5 text-muted">
+                        <i class="bi bi-journal-x fs-2 d-block mb-2" style="color: #cbd5e1;"></i>
+                        <span style="font-size: 0.8rem; font-weight: 500;">Belum ada aktivitas.</span>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -328,7 +407,6 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         
-        // 1. Bar Chart Kategori
         const ctxCategory = document.getElementById('categoryBarChart').getContext('2d');
         new Chart(ctxCategory, {
             type: 'bar',
@@ -361,7 +439,6 @@
             }
         });
 
-        // 2. Doughnut Chart Kondisi
         const ctxCondition = document.getElementById('conditionChart').getContext('2d');
         new Chart(ctxCondition, {
             type: 'doughnut',
@@ -385,22 +462,14 @@
             }
         });
 
-        // 3. Logika Filter JavaScript Tanpa Pindah Halaman
         const filterButtons = document.querySelectorAll('.btn-filter');
         const assetRows = document.querySelectorAll('.asset-row');
         const noMatchRow = document.getElementById('no-match-row');
 
         filterButtons.forEach(button => {
             button.addEventListener('click', function() {
-                // Hapus styling aktif dari semua tombol
-                filterButtons.forEach(btn => {
-                    btn.classList.remove('btn-primary-custom', 'text-white');
-                    btn.classList.add('btn-light', 'border', 'text-muted');
-                });
-                
-                // Tambahkan styling aktif ke tombol yang diklik
-                this.classList.remove('btn-light', 'border', 'text-muted');
-                this.classList.add('btn-primary-custom', 'text-white');
+                filterButtons.forEach(btn => btn.classList.remove('active-filter'));
+                this.classList.add('active-filter');
 
                 const filterValue = this.getAttribute('data-filter');
                 let matchCount = 0;
