@@ -277,7 +277,7 @@ class AssetController extends Controller
             ->with('success', 'Aset IT berhasil dihapus permanen.');
     }
 
-// FITUR HISTORY LOG MUTASI (DENGAN AJAX & FILTER)
+// FITUR HISTORY LOG MUTASI
     public function history(Request $request)
     {
         $query = AssetHistory::with(['asset', 'user']);
@@ -303,36 +303,32 @@ class AssetController extends Controller
             $query->where('action', $request->action_filter);
         }
 
-        // 3. Filter Berdasarkan Waktu
-        if ($request->filled('time_filter')) {
-            $time = $request->time_filter;
-            if ($time == 'today') {
-                $query->whereDate('created_at', \Carbon\Carbon::today());
-            } elseif ($time == 'week') {
-                $query->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(), \Carbon\Carbon::now()->endOfWeek()]);
-            } elseif ($time == 'month') {
-                $query->whereMonth('created_at', \Carbon\Carbon::now()->month)
-                      ->whereYear('created_at', \Carbon\Carbon::now()->year);
-            }
+        // 3. Filter Berdasarkan Waktu (Diperbaiki agar 'week' akurat 1 minggu penuh)
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = \Carbon\Carbon::parse($request->start_date)->startOfDay();
+            $endDate   = \Carbon\Carbon::parse($request->end_date)->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        } elseif ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        } elseif ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
         }
 
         $histories = $query->latest()->paginate(15);
         $histories->appends($request->all()); 
 
-        // JIKA REQUEST DARI AJAX, KEMBALIKAN HANYA BAGIAN TABELNYA SAJA
         if ($request->ajax()) {
-            return view('assets.partials.history_table', compact('histories'))->render();
+            return view('assets.history', compact('histories'));
         }
 
         return view('assets.history', compact('histories'));
     }
 
-// FITUR CETAK PDF LOG MUTASI (DENGAN FILTER)
+    // FITUR CETAK PDF LOG MUTASI (DENGAN FILTER & PERBAIKAN WAKTU)
     public function exportHistoryPDF(Request $request)
     {
         $query = AssetHistory::with(['asset', 'user']);
 
-        // 1. Filter Pencarian Teks
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -348,29 +344,28 @@ class AssetController extends Controller
             });
         }
 
-        // 2. Filter Berdasarkan Jenis Aksi
         if ($request->filled('action_filter')) {
             $query->where('action', $request->action_filter);
         }
 
-        // 3. Filter Berdasarkan Waktu
         if ($request->filled('time_filter')) {
             $time = $request->time_filter;
             if ($time == 'today') {
                 $query->whereDate('created_at', \Carbon\Carbon::today());
             } elseif ($time == 'week') {
-                $query->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(), \Carbon\Carbon::now()->endOfWeek()]);
+                $startOfWeek = \Carbon\Carbon::now()->startOfWeek(\Carbon\Carbon::MONDAY)->startOfDay();
+                $endOfWeek   = \Carbon\Carbon::now()->endOfWeek(\Carbon\Carbon::SUNDAY)->endOfDay();
+                $query->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
             } elseif ($time == 'month') {
                 $query->whereMonth('created_at', \Carbon\Carbon::now()->month)
                       ->whereYear('created_at', \Carbon\Carbon::now()->year);
             }
         }
 
-        // Eksekusi query (ambil semua data yang lolos filter tanpa pagination)
         $histories = $query->latest()->get();
-        
         $pdf = Pdf::loadView('assets.pdf_history', compact('histories'))->setPaper('a4', 'portrait');
         
         return $pdf->stream('Laporan_Log_Mutasi_Aset_IT.pdf');
     }
+
 }
