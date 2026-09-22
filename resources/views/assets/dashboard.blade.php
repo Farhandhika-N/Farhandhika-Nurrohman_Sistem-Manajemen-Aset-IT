@@ -356,7 +356,7 @@
                 <a href="{{ route('assets.history') }}" class="text-decoration-none fw-semibold" style="font-size: 0.75rem; color: #4f46e5;">Lihat Semua &rarr;</a>
             </div>
 
-            <!-- [PERUBAHAN DISINI] Menambahkan class table-scrollable -->
+            <!-- Menambahkan class table-scrollable -->
             <div class="table-responsive table-scrollable flex-grow-1 pe-2" style="max-height: 350px; overflow-y: auto;">
                 @if(isset($recentHistories) && $recentHistories->count() > 0)
                     <ul class="timeline">

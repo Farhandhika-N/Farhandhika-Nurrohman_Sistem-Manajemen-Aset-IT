@@ -13,20 +13,16 @@
         .kop-surat h2 { margin: 0 0 5px 0; font-size: 12pt; color: #4f46e5; font-weight: bold; }
         .kop-surat p { margin: 2px 0; font-size: 9pt; color: #475569; }
 
-        /* --- JUDUL LAPORAN ELEGAN (Tanpa Underline) --- */
+        /* --- JUDUL LAPORAN --- */
         .judul-laporan { text-align: center; margin-bottom: 20px; }
         .judul-laporan h3 { margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
         .judul-laporan p { margin: 0; font-size: 9pt; color: #64748b; }
 
         /* --- TABEL ENTERPRISE KELAS MENENGAH --- */
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        /* Menggunakan border yang tegas seperti versi sebelumnya */
         th, td { border: 1px solid #94a3b8; padding: 7px 6px; text-align: left; vertical-align: top; word-wrap: break-word; }
-        
-        /* Header tabel dengan latar lembut dan border bawah yang dipertegas */
         th { background-color: #f1f5f9; color: #1e293b; font-size: 9pt; font-weight: bold; border-bottom: 2px solid #475569; }
         
-        /* Isi tabel standar agar mudah dibaca */
         td { font-size: 8.5pt; color: #1e293b; }
         
         .text-center { text-align: center; }
@@ -107,7 +103,6 @@
         <div class="ttd-box">
             <p>Bandung, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
             <p><strong>Kepala Divisi IT</strong></p>
-            <!-- Spasi untuk tanda tangan fisik -->
             <p class="nama-ttd">{{ auth()->user()->name ?? 'Administrator IT' }}</p>
             <p>NIP. 19820311 200801 1 009</p>
         </div>
