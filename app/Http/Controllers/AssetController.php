@@ -61,10 +61,10 @@ class AssetController extends Controller
         // Data untuk Tabel Register Terbaru (5 item terakhir)
         $asetTerbaru = Asset::latest()->take(5)->get();
 
-        // [PERBAIKAN] Mengambil 5 Log Aktivitas Terakhir untuk Widget Dashboard
+        // Mengambil 5 Log Aktivitas Terakhir untuk Widget Dashboard
         $recentHistories = AssetHistory::with(['asset', 'user'])->latest()->take(5)->get();
 
-        // [PERBAIKAN] Jangan lupa variabelnya dimasukkan ke compact()
+        // Jangan lupa variabelnya dimasukkan ke compact()
         return view('assets.dashboard', compact(
             'totalAset', 'asetBaik', 'asetPerbaikan', 'asetRusak',
             'kategoriLabel', 'kategoriData', 'asetTerbaru', 'recentHistories'
@@ -255,13 +255,12 @@ class AssetController extends Controller
         $assetImage = $asset->image;
 
         // 2. Hapus permanen data aset dari database 
-        // (Berkat migration baru, log lama tidak akan hilang, asset_id-nya otomatis berubah jadi NULL)
         $asset->delete();
         
         // 3. CATAT LOG PENGHAPUSAN
         if (auth()->check()) {
             AssetHistory::create([
-                'asset_id' => null, // Sekarang database sudah mengizinkan NULL
+                'asset_id' => null,
                 'user_id' => auth()->id(),
                 'action' => 'Penghapusan Aset',
                 'notes' => "Aset '{$assetName}' (S/N: {$assetCode}) telah dihapus permanen dari sistem.",
@@ -303,7 +302,7 @@ class AssetController extends Controller
             $query->where('action', $request->action_filter);
         }
 
-        // 3. Filter Berdasarkan Waktu (Diperbaiki agar 'week' akurat 1 minggu penuh)
+        // 3. Filter Berdasarkan Waktu
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $startDate = \Carbon\Carbon::parse($request->start_date)->startOfDay();
             $endDate   = \Carbon\Carbon::parse($request->end_date)->endOfDay();

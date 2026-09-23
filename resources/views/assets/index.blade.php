@@ -140,7 +140,7 @@
                             @endif
                         </td>
                         <td class="text-center">
-                            <form id="delete-form-{{ $asset->id }}" action="{{ route('assets.destroy', $asset->id) }}" method="POST" class="m-0 d-inline-flex gap-2 justify-content-center">
+                            <div class="m-0 d-inline-flex gap-2 justify-content-center">
                                 <a class="action-btn action-btn-info" href="{{ route('assets.show', $asset->id) }}" title="Detail">
                                     <i class="bi bi-eye"></i>
                                 </a>
@@ -148,12 +148,14 @@
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
                                 @can('admin')
-                                @csrf @method('DELETE')
-                                <button type="button" class="action-btn action-btn-danger" onclick="confirmDelete({{ $asset->id }})" title="Hapus">
-                                    <i class="bi bi-trash3"></i>
-                                </button>
+                                <form id="delete-form-{{ $asset->id }}" action="{{ route('assets.destroy', $asset->id) }}" method="POST" class="m-0 d-inline-flex">
+                                    @csrf @method('DELETE')
+                                    <button type="button" class="action-btn action-btn-danger" onclick="confirmDelete({{ $asset->id }})" title="Hapus">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
                                 @endcan
-                            </form>
+                            </div>
                         </td>
                     </tr>
                     @empty

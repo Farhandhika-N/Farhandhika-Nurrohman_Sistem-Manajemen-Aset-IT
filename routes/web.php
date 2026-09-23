@@ -18,6 +18,12 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/assets-history', [AssetController::class, 'history'])->name('assets.history');
     Route::get('/assets-history/pdf', [AssetController::class, 'exportHistoryPDF'])->name('assets.history.pdf');
-    
-    Route::resource('assets', AssetController::class);
+
+    Route::middleware('can:admin')->group(function () {
+        Route::resource('assets', AssetController::class)
+            ->only(['create', 'store', 'destroy']);
+    });
+
+    Route::resource('assets', AssetController::class)
+        ->only(['index', 'show', 'edit', 'update']);
 });
