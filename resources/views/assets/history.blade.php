@@ -17,15 +17,14 @@
         color: white; 
         font-weight: 600; 
         border-radius: 8px; 
-        font-size: 0.8rem; 
-        padding: 0.40rem 0.9rem; 
+        font-size: 0.85rem; 
+        padding: 0.375rem 1rem; 
         border: none; 
         transition: 0.3s; 
     }
     .btn-pdf:hover { 
         background-color: #dc2626; 
         color: white; 
-        transform: translateY(-1px);
     }
 
     .badge-soft-success { background-color: #d1fae5; color: #059669; font-weight: 600; padding: 0.4em 0.7em; border-radius: 6px; font-size: 0.75rem; }
@@ -58,28 +57,15 @@
         padding-right: 20px !important;
     }
 
-    .input-ui {
-        height: 38px;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        font-size: 0.8rem;
-        background-color: #ffffff;
-        color: #334155;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
-        transition: 0.2s;
-    }
-    .input-ui:focus {
-        border-color: #4f46e5;
-        box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.1);
-        outline: none;
-    }
+    .input-ui { border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #334155; transition: 0.2s; }
+    .input-ui:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); outline: none; }
 
-    .date-label-group {
+    .control-label {
+        display: block;
         font-size: 0.75rem;
         font-weight: 600;
         color: #64748b;
         margin-bottom: 4px;
-        display: block;
         white-space: nowrap;
     }
 
@@ -117,60 +103,49 @@
         <!-- Tombol Cetak PDF Dinamis -->
         <div>
             <a id="btnPdfExport" href="{{ route('assets.history.pdf', request()->query()) }}" target="_blank" class="btn btn-pdf shadow-sm d-inline-flex align-items-center justify-content-center">
-                <i class="bi bi-file-earmark-pdf-fill fs-6 me-1.5"></i> Preview & Cetak PDF
+                <i class="bi bi-file-earmark-pdf-fill fs-6 me-2"></i> Preview & Cetak PDF
             </a>
         </div>
     </div>
     
     <!-- AREA KONTROL -->
-    <div class="p-3 mb-4" style="background-color: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
-        <div class="row g-2 align-items-end">
-            
-            <!-- 1. Ikon Filter -->
-            <div class="col-auto d-none d-lg-flex flex-column justify-content-center align-items-center text-secondary pe-2 pb-1" style="min-width: 50px;">
-                <i class="bi bi-funnel-fill" style="font-size: 0.95rem; line-height: 1; color: #475569;"></i>
-                <span class="fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px; color: #475569; margin-top: 3px;">FILTER</span>
-            </div>
+    <div class="p-3 mb-4" style="background-color: #f8fafc; border-radius: 10px; border: 1px solid #f1f5f9;">
+        <div class="row g-3 align-items-end">
 
-            <!-- Teks Filter Khusus Mode Mobile -->
-            <div class="col-12 d-lg-none d-flex align-items-center text-muted mb-1">
-                <i class="bi bi-funnel-fill me-1" style="font-size: 0.8rem;"></i> <span class="fw-bold" style="font-size: 0.75rem;">FILTER:</span>
-            </div>
-
-            <!-- 2. Dropdown Jenis Aksi -->
-            <div class="col-12 col-md-4 col-lg-3">
-                <select id="filterAction" class="form-select input-ui px-2.5 w-100" style="cursor: pointer;">
+            <!-- 1. Filter Jenis Aksi  -->
+            <div class="col-12 col-md-6 col-lg-5 col-xl-4 d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
+                <span class="text-muted fw-bold small d-none d-sm-inline me-1" style="font-size: 0.75rem;"><i class="bi bi-funnel-fill me-1"></i> FILTER</span>
+                <select id="filterAction" class="form-select input-ui py-2 flex-grow-1" style="cursor: pointer;">
                     <option value="">Semua Jenis Aksi</option>
                     <option value="Registrasi Aset Baru" {{ request('action_filter') == 'Registrasi Aset Baru' ? 'selected' : '' }}>Registrasi Aset Baru</option>
                     <option value="Mutasi Pemakai" {{ request('action_filter') == 'Mutasi Pemakai' ? 'selected' : '' }}>Mutasi Pemakai</option>
                     <option value="Perubahan Kondisi" {{ request('action_filter') == 'Perubahan Kondisi' ? 'selected' : '' }}>Perubahan Kondisi</option>
+                    <option value="Perubahan Data" {{ request('action_filter') == 'Perubahan Data' ? 'selected' : '' }}>Perubahan Data</option>
                     <option value="Penghapusan Aset" {{ request('action_filter') == 'Penghapusan Aset' ? 'selected' : '' }}>Penghapusan Aset</option>
                 </select>
             </div>
-            
-            <!-- 3. Rentang Waktu -->
-            <div class="col-12 col-md-8 col-lg-4">
-                <span class="date-label-group">Rentang Waktu (Dari - Sampai)</span>
+
+            <!-- 2. Rentang Waktu -->
+            <div class="col-12 col-md-6 col-lg-7 col-xl-5">
+                <span class="control-label">Rentang Waktu (Dari - Sampai)</span>
                 <div class="d-flex align-items-center gap-1">
-                    <input type="date" id="filterStartDate" class="form-control input-ui px-2 text-secondary w-100" value="{{ request('start_date') }}" title="Dari Tanggal">
+                    <input type="date" id="filterStartDate" class="form-control input-ui py-2 px-2 w-100" value="{{ request('start_date') }}" title="Dari Tanggal">
                     <span class="text-muted small px-1">-</span>
-                    <input type="date" id="filterEndDate" class="form-control input-ui px-2 text-secondary w-100" value="{{ request('end_date') }}" title="Sampai Tanggal">
-                    
-                    <!-- Tombol Reset Waktu Minimalis -->
+                    <input type="date" id="filterEndDate" class="form-control input-ui py-2 px-2 w-100" value="{{ request('end_date') }}" title="Sampai Tanggal">
+
+                    <!-- Tombol Reset Waktu -->
                     <button type="button" id="clearDateBtn" class="btn-reset-date-mini ms-1 {{ (request('start_date') || request('end_date')) ? '' : 'd-none' }}" title="Hapus Filter Waktu">
-                        <i class="bi bi-x-lg" style="font-size: 0.85rem;"></i>
+                        <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- 4. Kotak Pencarian & Reset Global -->
-            <div class="col-12 col-lg flex-grow-1">
-                <!-- Spacer kosong untuk menyeimbangkan posisi input dengan Dropdown & Tanggal -->
-                <span class="date-label-group d-none d-lg-block">&nbsp;</span>
+            <!-- 3. Pencarian & Reset Global -->
+            <div class="col-12 col-xl-3">
                 <div class="d-flex gap-2 w-100">
-                    <div class="input-group input-ui w-100" style="overflow: hidden; padding: 0; background: #fff;">
-                        <span class="input-group-text bg-white border-0 text-muted ps-2.5"><i class="bi bi-search"></i></span>
-                        <input type="search" id="filterSearch" class="form-control border-0 bg-white shadow-none ps-1.5 pe-3" placeholder="Cari data, catatan, admin..." value="{{ request('search') }}" autocomplete="off" style="font-size: 0.85rem; height: 36px;">
+                    <div class="input-group" style="border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff;">
+                        <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="search" id="filterSearch" class="form-control border-0 bg-white shadow-none py-2" placeholder="Cari data, catatan, admin..." value="{{ request('search') }}" autocomplete="off" style="font-size: 0.85rem;">
                     </div>
 
                     <!-- Tombol Reset Semua Filter -->
@@ -249,7 +224,7 @@
 
         <!-- Footer (Pagination) -->
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center pt-2 gap-3">
-            <span class="text-muted fw-semibold small text-center text-md-start" style="font-size: 0.8rem;">
+            <span class="text-muted fw-semibold small text-center text-md-start" style="font-size: 0.85rem;">
                 Menampilkan <span class="text-dark">{{ $histories->firstItem() ?? 0 }}</span> - <span class="text-dark">{{ $histories->lastItem() ?? 0 }}</span> dari <span class="text-dark">{{ $histories->total() }}</span> total riwayat
             </span>
             <div class="d-flex justify-content-center overflow-auto w-100 w-md-auto">

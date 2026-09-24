@@ -2,19 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class AssetHistory extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['asset_id', 'user_id', 'action', 'notes'];
 
-    // Relasi balik ke Aset
     public function asset()
     {
-        return $this->belongsTo(Asset::class);
+        return $this->belongsTo(Asset::class)->withTrashed();
     }
 
-    // Relasi balik ke User pencatat
     public function user()
     {
         return $this->belongsTo(User::class);

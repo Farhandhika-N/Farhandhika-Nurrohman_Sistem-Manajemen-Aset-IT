@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\AssetHistory;
+use App\Http\Requests\StoreAssetRequest;
+use App\Http\Requests\UpdateAssetRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
@@ -45,26 +47,21 @@ class AssetController extends Controller
     // FITUR DASHBOARD
     public function dashboard()
     {
-        // Menghitung metrik KPI
         $totalAset = Asset::count();
         $asetBaik = Asset::where('condition', 'Baik')->count();
         $asetPerbaikan = Asset::where('condition', 'Perbaikan')->count();
         $asetRusak = Asset::where('condition', 'Rusak')->count();
 
-        // Data untuk Bar Chart (Kategori)
         $kategoriDataRaw = Asset::selectRaw('category, count(*) as total')
                                 ->groupBy('category')
                                 ->pluck('total', 'category');
         $kategoriLabel = $kategoriDataRaw->keys()->toArray();
         $kategoriData = $kategoriDataRaw->values()->toArray();
 
-        // Data untuk Tabel Register Terbaru (5 item terakhir)
         $asetTerbaru = Asset::latest()->take(5)->get();
 
-        // Mengambil 5 Log Aktivitas Terakhir untuk Widget Dashboard
         $recentHistories = AssetHistory::with(['asset', 'user'])->latest()->take(5)->get();
 
-        // Jangan lupa variabelnya dimasukkan ke compact()
         return view('assets.dashboard', compact(
             'totalAset', 'asetBaik', 'asetPerbaikan', 'asetRusak',
             'kategoriLabel', 'kategoriData', 'asetTerbaru', 'recentHistories'
@@ -139,41 +136,15 @@ class AssetController extends Controller
     }
 
     // 3. STORE: Menyimpan data ke database
-    public function store(Request $request) 
+    public function store(StoreAssetRequest $request) 
     {
-        $request->validate([
-            'asset_code' => 'required|unique:assets',
-            'name' => 'required',
-            'category' => 'required',
-            'condition' => 'required',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ], [
-            'asset_code.required' => 'Kode Aset (S/N) wajib diisi.',
-            'asset_code.unique' => 'Kode Aset sudah terdaftar di sistem.',
-            'name.required' => 'Nama / Merk barang wajib diisi.',
-            'category.required' => 'Silakan pilih kategori.',
-            'condition.required' => 'Silakan pilih kondisi.',
-            'image.image' => 'File harus berupa gambar.',
-            'image.mimes' => 'Format gambar harus jpeg, png, atau jpg.',
-            'image.max' => 'Ukuran file gambar maksimal 2MB.',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validated();
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('assets_images', 'public');
         }
 
-        $asset = Asset::create($data);
-        
-        if (auth()->check()) {
-            AssetHistory::create([
-                'asset_id' => $asset->id,
-                'user_id' => auth()->id(),
-                'action' => 'Registrasi Aset Baru',
-                'notes' => 'Aset ditambahkan ke dalam sistem dengan kondisi ' . $asset->condition,
-            ]);
-        }
+        Asset::create($data);
 
         return redirect()->route('assets.index')
             ->with('success', 'Aset IT berhasil ditambahkan.');
@@ -192,91 +163,61 @@ class AssetController extends Controller
     }
 
     // 6. UPDATE: Memperbarui data ke database
-    public function update(Request $request, Asset $asset) 
+    public function update(UpdateAssetRequest $request, Asset $asset) 
     {
-        $request->validate([
-            'asset_code' => 'required|unique:assets,asset_code,'.$asset->id,
-            'name' => 'required',
-            'category' => 'required',
-            'condition' => 'required',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ], [
-            'asset_code.required' => 'Kode Aset (S/N) wajib diisi.',
-            'asset_code.unique' => 'Kode Aset sudah terdaftar di sistem.',
-            'name.required' => 'Nama / Merk barang wajib diisi.',
-            'category.required' => 'Silakan pilih kategori.',
-            'condition.required' => 'Silakan pilih kondisi.',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validated();
 
         if ($request->hasFile('image')) {
             if ($asset->image) {
                 Storage::disk('public')->delete($asset->image);
             }
             $data['image'] = $request->file('image')->store('assets_images', 'public');
+        } else {
+            unset($data['image']);
         }
 
-        $asset->fill($data);
-        
-        if (auth()->check()) {
-            if ($asset->isDirty('assigned_to')) {
-                $notes = $asset->assigned_to ? 'Dipinjamkan kepada: ' . $asset->assigned_to : 'Dikembalikan ke Gudang IT';
-                AssetHistory::create([
-                    'asset_id' => $asset->id,
-                    'user_id' => auth()->id(),
-                    'action' => 'Mutasi Pemakai',
-                    'notes' => $notes,
-                ]);
-            }
+        $asset->fill($data)->save();
 
-            if ($asset->isDirty('condition')) {
-                AssetHistory::create([
-                    'asset_id' => $asset->id,
-                    'user_id' => auth()->id(),
-                    'action' => 'Perubahan Kondisi',
-                    'notes' => 'Kondisi diubah menjadi: ' . $asset->condition . '. Catatan: ' . ($asset->problem_description ?? '-'),
-                ]);
-            }
-        }
-        
-        $asset->save();
-        
         return redirect()->route('assets.index')
             ->with('success', 'Data Aset IT berhasil diperbarui.');
     }
 
-// 7. DESTROY: Menghapus data dari database
+    // 7. DESTROY: Pindahkan aset ke Kotak Sampah
     public function destroy(Asset $asset) 
     {
-        // 1. Simpan nama dan kode untuk dicatat di log karena datanya akan lenyap
-        $assetName = $asset->name;
-        $assetCode = $asset->asset_code;
-        $assetImage = $asset->image;
-
-        // 2. Hapus permanen data aset dari database 
         $asset->delete();
-        
-        // 3. CATAT LOG PENGHAPUSAN
-        if (auth()->check()) {
-            AssetHistory::create([
-                'asset_id' => null,
-                'user_id' => auth()->id(),
-                'action' => 'Penghapusan Aset',
-                'notes' => "Aset '{$assetName}' (S/N: {$assetCode}) telah dihapus permanen dari sistem.",
-            ]);
-        }
 
-        // 4. Hapus file gambar fisik dari storage jika ada
-        if ($assetImage) {
-            Storage::disk('public')->delete($assetImage);
-        }
-        
         return redirect()->route('assets.index')
-            ->with('success', 'Aset IT berhasil dihapus permanen.');
+            ->with('success', 'Aset IT dipindahkan ke Kotak Sampah.');
     }
 
-// FITUR HISTORY LOG MUTASI
+    // KOTAK SAMPAH: Daftar aset terhapus (soft delete)
+    public function trash()
+    {
+        $assets = Asset::onlyTrashed()->latest('deleted_at')->paginate(10);
+
+        return view('assets.trash', compact('assets'));
+    }
+
+    // KOTAK SAMPAH: Mengembalikan aset seperti semula
+    public function restore(Asset $asset)
+    {
+        $asset->restore();
+
+        return redirect()->route('assets.trash')
+            ->with('success', 'Aset berhasil dipulihkan dari Kotak Sampah.');
+    }
+
+    // KOTAK SAMPAH: Menghapus aset beserta file gambar secara permanen
+    public function forceDestroy(Asset $asset)
+    {
+        $asset->forceDelete();
+
+        return redirect()->route('assets.trash')
+            ->with('success', 'Aset dihapus permanen dari sistem.');
+    }
+
+    // FITUR HISTORY LOG MUTASI
     public function history(Request $request)
     {
         $query = AssetHistory::with(['asset', 'user']);
@@ -315,10 +256,6 @@ class AssetController extends Controller
 
         $histories = $query->latest()->paginate(15);
         $histories->appends($request->all()); 
-
-        if ($request->ajax()) {
-            return view('assets.history', compact('histories'));
-        }
 
         return view('assets.history', compact('histories'));
     }

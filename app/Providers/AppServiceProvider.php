@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use App\Models\Asset;
 use App\Models\User;
+use App\Observers\AssetObserver;
 use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,9 +25,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Carbon::setLocale('id');
-        
+
         Gate::define('admin', function (User $user) {
-        return $user->role === 'admin';
-    });
+            return $user->role === 'admin';
+        });
+
+        Asset::observe(AssetObserver::class);
     }
 }

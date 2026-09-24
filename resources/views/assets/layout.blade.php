@@ -173,6 +173,12 @@
         <a href="{{ route('assets.index') }}" class="nav-link-sidebar {{ request()->routeIs('assets.index') || request()->routeIs('assets.show') || request()->routeIs('assets.edit') || request()->routeIs('assets.create') ? 'active' : '' }}">
             <i class="bi bi-hdd-network-fill fs-6"></i> Data Inventaris
         </a>
+
+        @can('admin')
+        <a href="{{ route('assets.trash') }}" class="nav-link-sidebar {{ request()->routeIs('assets.trash') ? 'active' : '' }}">
+            <i class="bi bi-trash3-fill fs-6" style="color: #f472b6;"></i> Kotak Sampah
+        </a>
+        @endcan
         
         <span class="text-uppercase fw-bold mt-4 mb-2 d-block px-2" style="font-size: 0.65rem; letter-spacing: 1px; color: #64748b;">Laporan</span>
         
@@ -182,6 +188,18 @@
         <a href="{{ route('assets.export') }}" class="nav-link-sidebar">
             <i class="bi bi-file-earmark-excel-fill fs-6" style="color: #34d399;"></i> Export Excel
         </a>
+
+        <span class="text-uppercase fw-bold mt-4 mb-2 d-block px-2" style="font-size: 0.65rem; letter-spacing: 1px; color: #64748b;">Pengaturan</span>
+
+        <a href="{{ route('profile.edit') }}" class="nav-link-sidebar {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+            <i class="bi bi-person-circle fs-6" style="color: #38bdf8;"></i> Profil Saya
+        </a>
+
+        @can('admin')
+        <a href="{{ route('users.index') }}" class="nav-link-sidebar {{ request()->routeIs('users.*') ? 'active' : '' }}">
+            <i class="bi bi-people-fill fs-6" style="color: #818cf8;"></i> Manajemen User
+        </a>
+        @endcan
     </div>
 
     <!-- Bagian User Profile & Logout -->
@@ -289,6 +307,12 @@
 @if(session('success'))
     <script>
         Swal.fire({ icon: 'success', title: 'Berhasil!', text: '{{ session("success") }}', showConfirmButton: false, timer: 1500 });
+    </script>
+@endif
+
+@if(session('error'))
+    <script>
+        Swal.fire({ icon: 'error', title: 'Gagal', text: '{{ session("error") }}', confirmButtonColor: '#4f46e5', confirmButtonText: 'Tutup' });
     </script>
 @endif
 

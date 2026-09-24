@@ -370,6 +370,8 @@
                                         <i class="bi bi-arrow-left-right text-primary" style="font-size: 0.85rem;"></i>
                                     @elseif($log->action == 'Penghapusan Aset')
                                         <i class="bi bi-trash text-danger" style="font-size: 0.8rem;"></i>
+                                    @elseif($log->action == 'Perubahan Data')
+                                        <i class="bi bi-pencil-square text-primary" style="font-size: 0.8rem;"></i>
                                     @else
                                         <i class="bi bi-wrench text-warning" style="font-size: 0.8rem;"></i>
                                     @endif

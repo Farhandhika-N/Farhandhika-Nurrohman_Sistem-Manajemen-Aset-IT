@@ -187,12 +187,12 @@
     function confirmDelete(id) {
         Swal.fire({
             title: 'Konfirmasi Hapus',
-            text: "Data aset IT ini akan dihapus secara permanen dari sistem!",
+            text: "Data aset IT ini akan dipindahkan ke Kotak Sampah dan masih dapat dipulihkan.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#f01414', 
             cancelButtonColor: '#94a3b8',
-            confirmButtonText: 'Ya, Hapus Data',
+            confirmButtonText: 'Ya, Pindahkan',
             cancelButtonText: 'Batal',
             reverseButtons: true
         }).then((result) => {

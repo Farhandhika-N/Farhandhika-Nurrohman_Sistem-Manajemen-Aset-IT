@@ -36,16 +36,6 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
-
-        Schema::create('assets', function (Blueprint $table) {
-        $table->id();
-        $table->string('asset_code')->unique();
-        $table->string('name');
-        $table->string('category');
-        $table->string('condition');
-        $table->string('assigned_to')->nullable();
-        $table->timestamps();
-        });
     }
 
     /**
