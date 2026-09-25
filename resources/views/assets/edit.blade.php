@@ -59,10 +59,9 @@
             <div class="col-md-6">
                 <label class="form-label fw-bold">Kategori <span class="text-danger">*</span></label>
                 <select name="category" class="form-select input-ui @error('category') is-invalid @enderror" style="cursor: pointer;">
-                    <option value="Laptop" @if(old('category', $asset->category) == 'Laptop') selected @endif>Laptop</option>
-                    <option value="PC Desktop" @if(old('category', $asset->category) == 'PC Desktop' || old('category', $asset->category) == 'PC') selected @endif>PC Desktop</option>
-                    <option value="Printer" @if(old('category', $asset->category) == 'Printer') selected @endif>Printer</option>
-                    <option value="Router" @if(old('category', $asset->category) == 'Router') selected @endif>Router</option>
+                    @foreach (config('aset.kategori') as $value => $label)
+                    <option value="{{ $value }}" @if(old('category', $asset->category) == $value) selected @endif>{{ $label }}</option>
+                    @endforeach
                 </select>
                 @error('category')
                     <div class="invalid-feedback fw-semibold small">{{ $message }}</div>
@@ -73,9 +72,9 @@
             <div class="col-md-6">
                 <label class="form-label fw-bold">Kondisi <span class="text-danger">*</span></label>
                 <select name="condition" class="form-select input-ui @error('condition') is-invalid @enderror" style="cursor: pointer;">
-                    <option value="Baik" @if(old('condition', $asset->condition) == 'Baik') selected @endif>Baik</option>
-                    <option value="Perbaikan" @if(old('condition', $asset->condition) == 'Perbaikan') selected @endif>Sedang Perbaikan</option>
-                    <option value="Rusak" @if(old('condition', $asset->condition) == 'Rusak') selected @endif>Rusak (Afkir)</option>
+                    @foreach (config('aset.kondisi') as $value => $label)
+                    <option value="{{ $value }}" @if(old('condition', $asset->condition) == $value) selected @endif>{{ $label }}</option>
+                    @endforeach
                 </select>
                 @error('condition')
                     <div class="invalid-feedback fw-semibold small">{{ $message }}</div>

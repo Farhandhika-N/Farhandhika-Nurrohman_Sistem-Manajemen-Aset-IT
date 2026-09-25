@@ -15,6 +15,9 @@
     .btn-export { background-color: #ffffff; color: #10b981; font-weight: 600; border-radius: 8px; font-size: 0.85rem; border: 1px solid #10b981; transition: 0.3s; }
     .btn-export:hover { background-color: #ecfdf5; color: #10b981; }
 
+    .btn-pdf { background-color: #ffffff; color: #ef4444; font-weight: 600; border-radius: 8px; font-size: 0.85rem; border: 1px solid #ef4444; transition: 0.3s; }
+    .btn-pdf:hover { background-color: #fef2f2; color: #ef4444; }
+
     .badge-soft-green { background-color: #d1fae5; color: #059669; font-weight: 600; padding: 0.4em 0.7em; border-radius: 6px; font-size: 0.75rem; }
     .badge-soft-warning { background-color: #fef3c7; color: #d97706; font-weight: 600; padding: 0.4em 0.7em; border-radius: 6px; font-size: 0.75rem; }
     .badge-soft-danger { background-color: #fee2e2; color: #dc2626; font-weight: 600; padding: 0.4em 0.7em; border-radius: 6px; font-size: 0.75rem; }
@@ -60,6 +63,9 @@
             <a id="btnExport" class="btn btn-export shadow-sm d-flex align-items-center justify-content-center px-3" href="{{ route('assets.export') }}">
                 <i class="bi bi-file-earmark-excel fs-6 me-2"></i> Export Excel
             </a>
+            <a id="btnPdf" class="btn btn-pdf shadow-sm d-flex align-items-center justify-content-center px-3" href="{{ route('assets.export.pdf') }}" target="_blank">
+                <i class="bi bi-file-earmark-pdf fs-6 me-2"></i> Cetak PDF
+            </a>
             @can('admin')
             <a class="btn btn-primary-custom shadow-sm d-flex align-items-center justify-content-center px-4" href="{{ route('assets.create') }}">
                 <i class="bi bi-plus-lg fs-6 me-2"></i> Tambah Aset
@@ -78,17 +84,16 @@
                 
                 <select id="filterCategory" class="form-select input-ui py-2 flex-grow-1" style="cursor: pointer;">
                     <option value="">Semua Kategori</option>
-                    <option value="Laptop" {{ request('category') == 'Laptop' ? 'selected' : '' }}>Laptop</option>
-                    <option value="PC Desktop" {{ request('category') == 'PC Desktop' ? 'selected' : '' }}>PC Desktop</option>
-                    <option value="Printer" {{ request('category') == 'Printer' ? 'selected' : '' }}>Printer</option>
-                    <option value="Router" {{ request('category') == 'Router' ? 'selected' : '' }}>Router</option>
+                    @foreach (config('aset.kategori') as $value => $label)
+                    <option value="{{ $value }}" {{ request('category') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
                 </select>
                 
                 <select id="filterCondition" class="form-select input-ui py-2 flex-grow-1" style="cursor: pointer;">
                     <option value="">Semua Kondisi</option>
-                    <option value="Baik" {{ request('condition') == 'Baik' ? 'selected' : '' }}>Baik</option>
-                    <option value="Perbaikan" {{ request('condition') == 'Perbaikan' ? 'selected' : '' }}>Perbaikan</option>
-                    <option value="Rusak" {{ request('condition') == 'Rusak' ? 'selected' : '' }}>Rusak (Afkir)</option>
+                    @foreach (config('aset.kondisi') as $value => $label)
+                    <option value="{{ $value }}" {{ request('condition') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
                 </select>
             </div>
 
@@ -217,6 +222,12 @@
         if (category) exportUrl.searchParams.append('category', category);
         if (condition) exportUrl.searchParams.append('condition', condition);
         document.getElementById('btnExport').href = exportUrl.href;
+
+        let pdfUrl = new URL("{{ route('assets.export.pdf') }}");
+        if (search) pdfUrl.searchParams.append('search', search);
+        if (category) pdfUrl.searchParams.append('category', category);
+        if (condition) pdfUrl.searchParams.append('condition', condition);
+        document.getElementById('btnPdf').href = pdfUrl.href;
 
         fetch(url)
             .then(response => response.text())

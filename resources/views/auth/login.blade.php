@@ -153,7 +153,20 @@
                             <span>Masuk ke Sistem</span>
                             <i class="bi bi-arrow-right"></i>
                         </button>
+
+                        <div class="text-center mt-3">
+                            <a href="{{ route('password.request') }}" class="text-decoration-none d-inline-flex align-items-center gap-1" style="color: #4f46e5; font-size: 0.8rem; font-weight: 600;">
+                                <i class="bi bi-key"></i> Lupa password?
+                            </a>
+                        </div>
                     </form>
+
+                    @if (session('status'))
+                        <div class="alert alert-success d-flex align-items-start gap-2 mt-3 mb-0" style="font-size: 0.85rem; border-radius: 10px;">
+                            <i class="bi bi-check-circle-fill mt-1"></i>
+                            <span>{{ session('status') }}</span>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Footer Copyright -->

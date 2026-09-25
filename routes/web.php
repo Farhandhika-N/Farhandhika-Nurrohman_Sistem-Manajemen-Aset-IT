@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 
@@ -14,9 +15,18 @@ Route::get('/login', [AuthController::class, 'login'])->name('login')->middlewar
 Route::post('/login', [AuthController::class, 'authenticate'])->middleware(['guest', 'throttle:5,1']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Lupa & reset password (guest, dibatasi agar tidak disalahkan kirim email massal)
+Route::middleware('guest')->group(function () {
+    Route::get('/forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'store'])->middleware('throttle:6,1')->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:6,1')->name('password.update');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/assets/dashboard', [AssetController::class, 'dashboard'])->name('assets.dashboard');
     Route::get('/assets/export', [AssetController::class, 'exportExcel'])->name('assets.export');
+    Route::get('/assets/export-pdf', [AssetController::class, 'exportPDF'])->name('assets.export.pdf');
 
     Route::get('/assets-history', [AssetController::class, 'history'])->name('assets.history');
     Route::get('/assets-history/pdf', [AssetController::class, 'exportHistoryPDF'])->name('assets.history.pdf');

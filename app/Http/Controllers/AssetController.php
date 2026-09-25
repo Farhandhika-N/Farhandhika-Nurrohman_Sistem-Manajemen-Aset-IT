@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AssetsExport;
 use App\Models\Asset;
 use App\Models\AssetHistory;
 use App\Http\Requests\StoreAssetRequest;
@@ -10,35 +11,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AssetController extends Controller 
 {
     // 1. READ: Menampilkan data & Fitur Pencarian
     public function index(Request $request) 
     {
-        $query = Asset::query();
-        
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                ->orWhere('asset_code', 'like', "%{$search}%")
-                ->orWhere('assigned_to', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('category')) {
-            $query->where('category', $request->category);
-        }
-
-        if ($request->filled('condition')) {
-            $query->where('condition', $request->condition);
-        }
-
-        $assets = $query->latest()->paginate(10);
+        $assets = Asset::filter($request)->latest()->paginate(10);
         $assets->appends($request->all()); 
 
         return view('assets.index', compact('assets'));
@@ -73,60 +52,17 @@ class AssetController extends Controller
     {
         $fileName = 'Laporan_Aset_IT_' . date('Y-m-d_H-i-s') . '.xlsx';
 
-        return Excel::download(new class($request) implements FromQuery, WithHeadings, WithMapping {
-            protected $request;
+        return Excel::download(new AssetsExport($request), $fileName);
+    }
 
-            public function __construct($request) {
-                $this->request = $request;
-            }
+    // FITUR CETAK PDF DAFTAR ASET (mengikuti filter yang sedang aktif)
+    public function exportPDF(Request $request)
+    {
+        $assets = Asset::filter($request)->latest()->get();
 
-            public function query() {
-                $query = Asset::query();
+        $pdf = Pdf::loadView('assets.pdf_assets', compact('assets'))->setPaper('a4', 'landscape');
 
-                if ($this->request->filled('search')) {
-                    $search = $this->request->search;
-                    $query->where(function($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%")
-                          ->orWhere('asset_code', 'like', "%{$search}%")
-                          ->orWhere('assigned_to', 'like', "%{$search}%");
-                    });
-                }
-
-                if ($this->request->filled('category')) {
-                    $query->where('category', $this->request->category);
-                }
-
-                if ($this->request->filled('condition')) {
-                    $query->where('condition', $this->request->condition);
-                }
-
-                return $query->latest(); 
-            }
-
-            public function headings(): array {
-                return [
-                    'Kode Aset (S/N)',
-                    'Nama / Merk Barang',
-                    'Kategori',
-                    'Kondisi',
-                    'Deskripsi Kendala',
-                    'Status / Pemakai',
-                    'Tanggal Input'
-                ];
-            }
-
-            public function map($asset): array {
-                return [
-                    $asset->asset_code,
-                    $asset->name,
-                    $asset->category,
-                    $asset->condition,
-                    $asset->problem_description ?? '-',
-                    $asset->assigned_to ?? 'Gudang (Tersedia)',
-                    $asset->created_at->format('Y-m-d H:i:s')
-                ];
-            }
-        }, $fileName);
+        return $pdf->stream('Laporan_Data_Aset_IT.pdf');
     }
 
     // 2. CREATE: Menampilkan form tambah aset
@@ -153,7 +89,7 @@ class AssetController extends Controller
     // 4. SHOW: Menampilkan detail aset 
     public function show(Asset $asset) 
     {
-        return view('assets.show', compact('asset'));
+        return view('assets.show', ['asset' => $asset->load('histories.user')]);
     }
 
     // 5. EDIT: Menampilkan form edit aset
@@ -220,41 +156,10 @@ class AssetController extends Controller
     // FITUR HISTORY LOG MUTASI
     public function history(Request $request)
     {
-        $query = AssetHistory::with(['asset', 'user']);
-
-        // 1. Filter Pencarian Teks
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('action', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($userQ) use ($search) {
-                      $userQ->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('asset', function($assetQ) use ($search) {
-                      $assetQ->where('name', 'like', "%{$search}%")
-                             ->orWhere('asset_code', 'like', "%{$search}%");
-                  });
-            });
-        }
-
-        // 2. Filter Berdasarkan Jenis Aksi
-        if ($request->filled('action_filter')) {
-            $query->where('action', $request->action_filter);
-        }
-
-        // 3. Filter Berdasarkan Waktu
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $startDate = \Carbon\Carbon::parse($request->start_date)->startOfDay();
-            $endDate   = \Carbon\Carbon::parse($request->end_date)->endOfDay();
-            $query->whereBetween('created_at', [$startDate, $endDate]);
-        } elseif ($request->filled('start_date')) {
-            $query->whereDate('created_at', '>=', $request->start_date);
-        } elseif ($request->filled('end_date')) {
-            $query->whereDate('created_at', '<=', $request->end_date);
-        }
-
-        $histories = $query->latest()->paginate(15);
+        $histories = AssetHistory::with(['asset', 'user'])
+            ->filter($request)
+            ->latest()
+            ->paginate(15);
         $histories->appends($request->all()); 
 
         return view('assets.history', compact('histories'));
@@ -263,42 +168,10 @@ class AssetController extends Controller
     // FITUR CETAK PDF LOG MUTASI (DENGAN FILTER & PERBAIKAN WAKTU)
     public function exportHistoryPDF(Request $request)
     {
-        $query = AssetHistory::with(['asset', 'user']);
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('action', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($userQ) use ($search) {
-                      $userQ->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('asset', function($assetQ) use ($search) {
-                      $assetQ->where('name', 'like', "%{$search}%")
-                             ->orWhere('asset_code', 'like', "%{$search}%");
-                  });
-            });
-        }
-
-        if ($request->filled('action_filter')) {
-            $query->where('action', $request->action_filter);
-        }
-
-        if ($request->filled('time_filter')) {
-            $time = $request->time_filter;
-            if ($time == 'today') {
-                $query->whereDate('created_at', \Carbon\Carbon::today());
-            } elseif ($time == 'week') {
-                $startOfWeek = \Carbon\Carbon::now()->startOfWeek(\Carbon\Carbon::MONDAY)->startOfDay();
-                $endOfWeek   = \Carbon\Carbon::now()->endOfWeek(\Carbon\Carbon::SUNDAY)->endOfDay();
-                $query->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
-            } elseif ($time == 'month') {
-                $query->whereMonth('created_at', \Carbon\Carbon::now()->month)
-                      ->whereYear('created_at', \Carbon\Carbon::now()->year);
-            }
-        }
-
-        $histories = $query->latest()->get();
+        $histories = AssetHistory::with(['asset', 'user'])
+            ->filter($request)
+            ->latest()
+            ->get();
         $pdf = Pdf::loadView('assets.pdf_history', compact('histories'))->setPaper('a4', 'portrait');
         
         return $pdf->stream('Laporan_Log_Mutasi_Aset_IT.pdf');
